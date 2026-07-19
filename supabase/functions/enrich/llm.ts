@@ -166,11 +166,17 @@ async function attemptOnce(
 // as a last resort. Only throws EnrichmentFailedError once both are
 // exhausted — callers should treat that as "mark the company failed, do not
 // persist an enrichment_results row."
+//
+// `overrides` lets tests exercise specific provider combinations directly
+// instead of having to mutate process env before module load (PROVIDER is
+// read once, at import time). index.ts calls this with no overrides, so
+// production behavior is unaffected.
 export async function enrichWithRetryAndFallback(
   company: CompanyInput,
+  overrides?: { primaryProvider?: string; fallbackProvider?: string },
 ): Promise<EnrichmentOutcome> {
-  const primaryProvider = PROVIDER;
-  const fallbackProvider = Deno.env.get("FALLBACK_LLM_PROVIDER") ?? "mock";
+  const primaryProvider = overrides?.primaryProvider ?? PROVIDER;
+  const fallbackProvider = overrides?.fallbackProvider ?? Deno.env.get("FALLBACK_LLM_PROVIDER") ?? "mock";
   let attempts = 0;
   let lastError: unknown;
 
