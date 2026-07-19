@@ -1,23 +1,30 @@
-export type EnrichmentStatus = "pending" | "enriched" | "failed";
+export type EnrichmentStatus = "pending" | "enriching" | "enriched" | "failed";
 
-// The raw company row (matches the provided migration + seed).
+// The raw company row (matches supabase/migrations/0001_init.sql).
 export interface Company {
   id: string;
   name: string;
   domain: string | null;
   raw_note: string | null;
   created_at: string;
-  // TODO(candidate): add the fields you introduce (e.g. status, or a joined
-  // enrichment object) as you design your schema.
+  status: EnrichmentStatus;
+  last_enriched_at: string | null;
+  last_error: string | null;
+  attempt_count: number;
+  owner_id: string | null;
 }
 
-// TODO(candidate): a type for the structured enrichment result.
-// Keep it in sync with the contract in supabase/functions/enrich/llm.ts.
+// Keep in sync with the contract in supabase/functions/enrich/llm.ts and the
+// enrichment_results table.
 export interface EnrichmentResult {
+  company_id: string;
   industry: string;
   employee_size_bucket: string;
   hq_country: string;
   one_line_summary: string;
   confidence: number;
-  // ...plus whatever provenance/source fields you decide to surface.
+  // Provenance: which provider/model produced this row.
+  source: string;
+  model: string | null;
+  updated_at: string;
 }
