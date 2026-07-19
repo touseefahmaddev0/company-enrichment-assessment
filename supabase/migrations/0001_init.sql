@@ -78,12 +78,40 @@ create index companies_raw_note_trgm_idx on public.companies using gin (lower(ra
 create index companies_created_at_idx on public.companies (created_at desc);
 
 
--- TODO(candidate): ROW LEVEL SECURITY -----------------------------------------
--- Enable RLS and add policy(ies) so a user can only see their own / their
--- tenant's rows. Remember:
---   * the Edge Function writes with the SERVICE ROLE, which BYPASSES RLS;
---   * separate SELECT / INSERT / UPDATE concerns, and use WITH CHECK on writes.
--- Explain your model in the README (and how you'd test it with two users).
+-- ROW LEVEL SECURITY -------------------------------------------------------------
+-- Isolation model: owner_id NULL = shared/org-wide (the bulk-loaded seed and
+-- anything created without a logged-in user), visible to everyone including
+-- anon. owner_id = a real user = private to that user. This lets the
+-- dashboard keep working over the anon key with no login UI wired up, while
+-- still giving genuine per-user isolation for rows that do have an owner.
+-- Full reasoning + a two-user test recipe are in the README.
 --
--- alter table public.companies enable row level security;
--- create policy "..." on public.companies for select using ( ... );
+-- The Edge Function writes with the SERVICE ROLE key, which BYPASSES RLS —
+-- that's intentional: it's the trusted server-side path that persists
+-- enrichment results after validating them.
+alter table public.companies enable row level security;
+alter table public.enrichment_results enable row level security;
+
+create policy "companies_select_own_or_shared"
+  on public.companies for select
+  using (owner_id is null or owner_id = auth.uid());
+
+-- Not currently exercised by the frontend (it never inserts companies), but
+-- included so the write side of the policy isn't left undefined: a user can
+-- only ever create rows they themselves own.
+create policy "companies_insert_own"
+  on public.companies for insert
+  to authenticated
+  with check (owner_id = auth.uid());
+
+-- enrichment_results has no owner_id of its own; isolation is derived by
+-- joining back to the parent company's ownership.
+create policy "enrichment_results_select_via_company"
+  on public.enrichment_results for select
+  using (
+    exists (
+      select 1 from public.companies c
+      where c.id = enrichment_results.company_id
+        and (c.owner_id is null or c.owner_id = auth.uid())
+    )
+  );
