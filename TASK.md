@@ -118,15 +118,4 @@ that's fine; just document what you did in the README.
 Push to a git repo (GitHub / GitLab) and send us the link. We'll then schedule a session where you
 **walk us through your work, answer questions on it, and build a small extension live** (~1 hour).
 
-## How we'll assess it (shared on purpose, so you can prioritise)
-| Weight | Area |
-|---|---|
-| 20% | LLM structured output + validation + retry / fallback |
-| 15% | Data model + migrations |
-| 15% | RLS policy + clear reasoning (how it isolates, how you'd test it) |
-| 15% | Frontend data-heavy patterns (server-side pagination / filtering, perf) |
-| 15% | Docs: setup, decisions, **honest scoping** |
-| 10% | Code quality + TypeScript |
-| 10% | Stretch items |
-
 Good luck — we're looking forward to seeing how you work.

@@ -7,26 +7,52 @@ create extension if not exists pgcrypto;
 
 -- Raw, messy input rows (mirrors companies_seed.json). This part is DONE.
 create table if not exists public.companies (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  domain      text,
-  raw_note    text,
-  created_at  timestamptz not null default now()
-  -- TODO(candidate): you will probably want an enrichment status here
-  --   (e.g. 'pending' | 'enriched' | 'failed') and possibly an owner/tenant
-  --   column to make RLS meaningful. Decide and add it.
+  id                 uuid primary key default gen_random_uuid(),
+  name               text not null,
+  domain             text,
+  raw_note           text,
+  created_at         timestamptz not null default now(),
+  -- Enrichment lifecycle. 'enriching' lets the UI show a spinner and guards
+  -- against double-triggering a re-run while a call is in flight.
+  status             text not null default 'pending'
+                       check (status in ('pending', 'enriching', 'enriched', 'failed')),
+  last_enriched_at   timestamptz,
+  -- RLS ownership. NULL = shared/org-wide data (e.g. the bulk-loaded seed);
+  -- a concrete owner_id is private to that user. See RLS section below.
+  owner_id           uuid references auth.users(id)
 );
 
 
--- TODO(candidate): ENRICHMENT RESULTS -----------------------------------------
--- Store the STRUCTURED enrichment for a company:
---   industry, employee_size_bucket, hq_country, one_line_summary, confidence (0..1)
--- Design questions to answer in the README:
---   * one row per company, or versioned / append-only?
---   * how do you record PROVENANCE (which step/source/model produced each field)?
---   * how do you represent status and failures?
---
--- create table public.enrichment_results ( ... );
+-- ENRICHMENT RESULTS -----------------------------------------------------------
+-- One row per company (upsert on re-run), not append-only/versioned: the
+-- dashboard only ever needs the latest enrichment, and an upsert keeps the
+-- write path simple. A separate append-only/per-field audit table is the
+-- stretch alternative (see README) and is deliberately not implemented here.
+-- Provenance is recorded per-row via `source`/`model`, not per-field.
+create table public.enrichment_results (
+  company_id            uuid primary key references public.companies(id) on delete cascade,
+  industry              text not null,
+  employee_size_bucket  text not null
+                          check (employee_size_bucket in ('1-50', '51-200', '201-1000', '1001-5000', '5000+')),
+  hq_country            text not null,
+  one_line_summary      text not null check (char_length(one_line_summary) <= 160),
+  confidence            numeric(3, 2) not null check (confidence >= 0 and confidence <= 1),
+  -- Provenance: which provider/model produced this row, e.g. 'mock',
+  -- 'openai:gpt-4o-mini'. `source` is the high-level channel, `model` the
+  -- specific model id/version (kept separate since a provider can have several).
+  source                text not null,
+  model                 text,
+  -- Raw provider response, kept for debugging/audit without shaping the schema.
+  raw_response          jsonb,
+  updated_at            timestamptz not null default now()
+);
+
+-- Last error + attempt count live on `companies`, not `enrichment_results`:
+-- a failed attempt has no valid enrichment to store a row for, and the
+-- companies row is what the dashboard's status column already reads from.
+alter table public.companies
+  add column last_error text,
+  add column attempt_count int not null default 0;
 
 
 -- TODO(candidate): INDEXES ----------------------------------------------------
