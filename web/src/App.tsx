@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { listCompanies, triggerEnrich } from "./api/companies";
-import type { Company } from "./types";
+import type { Company, EnrichmentStatus } from "./types";
 import { CompaniesTable } from "./components/CompaniesTable";
 import { CompanyDetail } from "./components/CompanyDetail";
 
@@ -14,6 +14,7 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<EnrichmentStatus | "">("");
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   // Debounce the free-text filter so typing doesn't fire a query per keystroke.
@@ -25,11 +26,16 @@ export default function App() {
   // A new filter invalidates the current page.
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, statusFilter]);
 
   const refresh = useCallback(() => {
     setLoading(true);
-    listCompanies({ page, pageSize: PAGE_SIZE, search: debouncedSearch })
+    listCompanies({
+      page,
+      pageSize: PAGE_SIZE,
+      search: debouncedSearch,
+      status: statusFilter || undefined,
+    })
       .then((res) => {
         setRows(res.rows);
         setTotal(res.total);
@@ -39,7 +45,7 @@ export default function App() {
       })
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     refresh();
@@ -78,6 +84,8 @@ export default function App() {
             pageSize={PAGE_SIZE}
             search={search}
             onSearchChange={setSearch}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
             onPageChange={setPage}
             onSelect={setSelected}
             onRerun={handleRerun}

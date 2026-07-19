@@ -8,6 +8,8 @@ interface Props {
   pageSize: number;
   search: string;
   onSearchChange: (value: string) => void;
+  statusFilter: EnrichmentStatus | "";
+  onStatusFilterChange: (value: EnrichmentStatus | "") => void;
   onPageChange: (page: number) => void;
   onSelect: (company: Company) => void;
   onRerun: (companyId: string) => void;
@@ -21,6 +23,8 @@ const STATUS_LABELS: Record<EnrichmentStatus, string> = {
   failed: "Failed",
 };
 
+const STATUS_OPTIONS: EnrichmentStatus[] = ["pending", "enriching", "enriched", "failed"];
+
 // Server-side pagination + free-text filter (~100k rows: the table only ever
 // renders one page at a time, `total` comes from the server's exact count).
 export function CompaniesTable({
@@ -31,6 +35,8 @@ export function CompaniesTable({
   pageSize,
   search,
   onSearchChange,
+  statusFilter,
+  onStatusFilterChange,
   onPageChange,
   onSelect,
   onRerun,
@@ -48,6 +54,18 @@ export function CompaniesTable({
           onChange={(e) => onSearchChange(e.target.value)}
           className="table-toolbar__input"
         />
+        <select
+          value={statusFilter}
+          onChange={(e) => onStatusFilterChange(e.target.value as EnrichmentStatus | "")}
+          className="table-toolbar__select"
+        >
+          <option value="">All statuses</option>
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {STATUS_LABELS[s]}
+            </option>
+          ))}
+        </select>
         <span className="table-toolbar__count">{total.toLocaleString()} companies</span>
       </div>
 

@@ -1,10 +1,11 @@
 import { supabase } from "../lib/supabase";
-import type { Company, EnrichmentResult } from "../types";
+import type { Company, EnrichmentResult, EnrichmentStatus } from "../types";
 
 export interface ListParams {
   page: number; // 1-based
   pageSize: number;
   search?: string;
+  status?: EnrichmentStatus;
 }
 
 export interface ListResult {
@@ -25,7 +26,7 @@ function sanitizeSearchTerm(term: string): string {
 // Postgres (backed by the trigram indexes in the migration) instead of
 // filtering ~100k rows in the browser.
 export async function listCompanies(params: ListParams): Promise<ListResult> {
-  const { page, pageSize, search } = params;
+  const { page, pageSize, search, status } = params;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -37,6 +38,9 @@ export async function listCompanies(params: ListParams): Promise<ListResult> {
   const term = search ? sanitizeSearchTerm(search) : "";
   if (term) {
     query = query.or(`name.ilike.%${term}%,raw_note.ilike.%${term}%`);
+  }
+  if (status) {
+    query = query.eq("status", status);
   }
 
   const { data, error, count } = await query.range(from, to);

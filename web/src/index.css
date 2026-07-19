@@ -49,6 +49,10 @@ body {
   min-width: 0;
 }
 
+.table-toolbar__select {
+  padding: 6px;
+}
+
 .table-toolbar__count {
   color: #666;
   font-size: 13px;
