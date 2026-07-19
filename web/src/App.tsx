@@ -62,14 +62,14 @@ export default function App() {
   }
 
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", padding: 24, maxWidth: 1100, margin: "0 auto" }}>
-      <h1 style={{ marginBottom: 4 }}>Company Enrichment</h1>
-      <p style={{ color: "#666", marginTop: 0 }}>
+    <main className="app-shell">
+      <h1 className="app-title">Company Enrichment</h1>
+      <p className="app-subtitle">
         Take-home starter — see <code>TASK.md</code>. Most of this is yours to build.
       </p>
 
-      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-        <div style={{ flex: 2, minWidth: 0 }}>
+      <div className="app-layout">
+        <div className="app-layout__table">
           <CompaniesTable
             rows={rows}
             loading={loading}
@@ -84,7 +84,7 @@ export default function App() {
             pendingIds={pendingIds}
           />
         </div>
-        <div style={{ flex: 1, minWidth: 240 }}>
+        <div className="app-layout__detail">
           <CompanyDetail company={selected} />
         </div>
       </div>

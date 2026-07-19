@@ -1,0 +1,166 @@
+body {
+  margin: 0;
+}
+
+.app-shell {
+  font-family: system-ui, sans-serif;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.app-title {
+  margin-bottom: 4px;
+}
+
+.app-subtitle {
+  color: #666;
+  margin-top: 0;
+}
+
+.app-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.app-layout__table {
+  flex: 2;
+  min-width: 0;
+}
+
+.app-layout__detail {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* --- Companies table --- */
+
+.table-toolbar {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.table-toolbar__input {
+  padding: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.table-toolbar__count {
+  color: #666;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.companies-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.companies-table thead tr {
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.companies-table th,
+.companies-table td {
+  padding: 8px;
+}
+
+.companies-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.companies-table td.clickable {
+  cursor: pointer;
+}
+
+.status-badge--pending {
+  color: #999;
+}
+
+.status-badge--enriching {
+  color: #b58900;
+}
+
+.status-badge--enriched {
+  color: #2a9d3f;
+}
+
+.status-badge--failed {
+  color: #d64545;
+}
+
+.pagination {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pagination__label {
+  font-size: 13px;
+  color: #666;
+}
+
+/* --- Company detail --- */
+
+.detail-empty {
+  color: #666;
+}
+
+.detail-panel {
+  border-left: 1px solid #eee;
+  padding-left: 16px;
+}
+
+.detail-panel h2 {
+  margin-top: 0;
+}
+
+.detail-note {
+  color: #666;
+}
+
+.detail-error {
+  color: #d64545;
+  font-size: 13px;
+}
+
+.detail-status {
+  color: #999;
+}
+
+.detail-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+
+.detail-fields dt {
+  color: #666;
+}
+
+/* --- Buttons --- */
+
+button {
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font: inherit;
+}
+
+button:hover:not(:disabled) {
+  background: #eee;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

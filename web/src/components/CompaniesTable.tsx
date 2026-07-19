@@ -14,11 +14,11 @@ interface Props {
   pendingIds: Set<string>;
 }
 
-const STATUS_STYLES: Record<EnrichmentStatus, { label: string; color: string }> = {
-  pending: { label: "Pending", color: "#999" },
-  enriching: { label: "Enriching…", color: "#b58900" },
-  enriched: { label: "Enriched", color: "#2a9d3f" },
-  failed: { label: "Failed", color: "#d64545" },
+const STATUS_LABELS: Record<EnrichmentStatus, string> = {
+  pending: "Pending",
+  enriching: "Enriching…",
+  enriched: "Enriched",
+  failed: "Failed",
 };
 
 // Server-side pagination + free-text filter (~100k rows: the table only ever
@@ -40,17 +40,15 @@ export function CompaniesTable({
 
   return (
     <div>
-      <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="table-toolbar">
         <input
           type="text"
           placeholder="Filter by name or note…"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          style={{ padding: 6, flex: 1, minWidth: 0 }}
+          className="table-toolbar__input"
         />
-        <span style={{ color: "#666", fontSize: 13, whiteSpace: "nowrap" }}>
-          {total.toLocaleString()} companies
-        </span>
+        <span className="table-toolbar__count">{total.toLocaleString()} companies</span>
       </div>
 
       {loading ? (
@@ -58,29 +56,28 @@ export function CompaniesTable({
       ) : rows.length === 0 ? (
         <p>No companies match — load the seed or adjust your filter (see TASK.md).</p>
       ) : (
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+        <table className="companies-table">
           <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-              <th style={{ padding: 8 }}>Name</th>
-              <th style={{ padding: 8 }}>Domain</th>
-              <th style={{ padding: 8 }}>Status</th>
-              <th style={{ padding: 8 }} />
+            <tr>
+              <th>Name</th>
+              <th>Domain</th>
+              <th>Status</th>
+              <th />
             </tr>
           </thead>
           <tbody>
             {rows.map((c) => {
               const isRunning = pendingIds.has(c.id) || c.status === "enriching";
-              const statusInfo = STATUS_STYLES[c.status] ?? STATUS_STYLES.pending;
               return (
-                <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                  <td style={{ padding: 8, cursor: "pointer" }} onClick={() => onSelect(c)}>
+                <tr key={c.id}>
+                  <td className="clickable" onClick={() => onSelect(c)}>
                     {c.name.trim()}
                   </td>
-                  <td style={{ padding: 8, cursor: "pointer" }} onClick={() => onSelect(c)}>
+                  <td className="clickable" onClick={() => onSelect(c)}>
                     {c.domain ?? "—"}
                   </td>
-                  <td style={{ padding: 8, color: statusInfo.color }}>{statusInfo.label}</td>
-                  <td style={{ padding: 8 }}>
+                  <td className={`status-badge--${c.status}`}>{STATUS_LABELS[c.status]}</td>
+                  <td>
                     <button onClick={() => onRerun(c.id)} disabled={isRunning}>
                       {isRunning ? "Running…" : c.status === "pending" ? "Run" : "Re-run"}
                     </button>
@@ -92,11 +89,11 @@ export function CompaniesTable({
         </table>
       )}
 
-      <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="pagination">
         <button onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
           Previous
         </button>
-        <span style={{ fontSize: 13, color: "#666" }}>
+        <span className="pagination__label">
           Page {page} of {totalPages}
         </span>
         <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>
