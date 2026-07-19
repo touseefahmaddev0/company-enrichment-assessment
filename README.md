@@ -1,4 +1,4 @@
-# Company Enrichment — &lt;your name&gt;
+# Company Enrichment — &lt;Touseef Ahmad&gt;
 
 > This is a template. Please fill it in as part of the exercise — we read it carefully.
 > Start with `TASK.md` for the full brief.

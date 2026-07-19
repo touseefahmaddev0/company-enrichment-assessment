@@ -55,9 +55,27 @@ alter table public.companies
   add column attempt_count int not null default 0;
 
 
--- TODO(candidate): INDEXES ----------------------------------------------------
--- Add the indexes your dashboard queries actually need — think about the columns
--- you filter, sort, and paginate on. Don't index blindly.
+-- INDEXES ----------------------------------------------------------------------
+-- pg_trgm backs trigram GIN indexes so the dashboard's free-text filter
+-- (`ILIKE '%term%'` across name/raw_note) stays index-assisted at ~100k rows
+-- instead of falling back to a sequential scan — a plain btree can't help
+-- with a leading-wildcard ILIKE.
+create extension if not exists pg_trgm;
+
+-- Status filter/column on the dashboard, and the status check the Edge
+-- Function does before re-running (skip if already 'enriching').
+create index companies_status_idx on public.companies (status);
+
+-- RLS predicate is `owner_id is null or owner_id = auth.uid()`; this index
+-- keeps that filter cheap once rows have real owners.
+create index companies_owner_id_idx on public.companies (owner_id);
+
+-- Free-text filter target columns.
+create index companies_name_trgm_idx on public.companies using gin (lower(name) gin_trgm_ops);
+create index companies_raw_note_trgm_idx on public.companies using gin (lower(raw_note) gin_trgm_ops);
+
+-- Default dashboard sort (newest first) paired with offset pagination.
+create index companies_created_at_idx on public.companies (created_at desc);
 
 
 -- TODO(candidate): ROW LEVEL SECURITY -----------------------------------------
